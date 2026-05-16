@@ -5,6 +5,62 @@ import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
+
+const allowedSpecialities = [
+  "General physician",
+  "Gynecologist",
+  "Dermatologist",
+  "Pediatricians",
+  "Neurologist",
+  "Gastroenterologist",
+];
+
+const normalizeSpeciality = (raw) => {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return "General physician";
+
+  for (const name of allowedSpecialities) {
+    if (s === name.toLowerCase()) return name;
+  }
+
+  if (s.includes("gastro") || s.includes("digest") || s.includes("hepato"))
+    return "Gastroenterologist";
+  if (s.includes("neuro") || s.includes("brain") || s.includes("nerv"))
+    return "Neurologist";
+  if (s.includes("derma") || s.includes("skin")) return "Dermatologist";
+  if (s.includes("gyn") || s.includes("obst") || s.includes("women"))
+    return "Gynecologist";
+  if (s.includes("pedi") || s.includes("child") || s.includes("kids"))
+    return "Pediatricians";
+
+  return "General physician";
+};
+
+const limitPerSpeciality = (list, limit) => {
+  const counts = new Map();
+  const out = [];
+
+  for (const doc of list || []) {
+    const key = String(doc?.speciality || "").trim();
+    if (!key) continue;
+    const c = counts.get(key) || 0;
+    if (c >= limit) continue;
+    counts.set(key, c + 1);
+    out.push(doc);
+  }
+
+  return out;
+};
+
+const doctorViewForPatient = async () => {
+  const doctorsRaw = await doctorModel.find({}).select("-password").lean();
+
+  const normalized = doctorsRaw
+    .map((d) => ({ ...d, speciality: normalizeSpeciality(d?.speciality) }))
+    .filter((d) => allowedSpecialities.includes(d.speciality));
+
+  return limitPerSpeciality(normalized, 5);
+};
 //Api for adding doctor
 const addDoctor = async (req, res) => {
   try {
@@ -127,7 +183,7 @@ const loginAdmin = async (req, res) => {
 // Api for get all doctors list
 const allDoctors = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({}).select("-password");
+    const doctors = await doctorViewForPatient();
     res.json({ success: true, doctors });
   } catch (error) {
     console.log("error:", error);
@@ -180,7 +236,7 @@ const appointmentCancel = async (req, res) => {
 
 const adminDashboard = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({});
+    const doctors = await doctorViewForPatient();
     const users = await userModel.find({});
     const appointments = await appointmentModel.find({});
 

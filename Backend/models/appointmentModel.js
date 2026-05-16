@@ -7,6 +7,8 @@ const appointmentSchema = new mongoose.Schema({
   slotTime: { type: String, required: true },
   userData: { type: Object, required: true },
   docData: { type: Object, required: true },
+  patientNote: { type: String, default: "" },
+  priority: { type: String, enum: ["Normal", "High"], default: "Normal" },
   amount: { type: Number, required: true },
   date: { type: Number, required: true },
   cancelled: { type: Boolean, default: false },

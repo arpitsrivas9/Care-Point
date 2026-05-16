@@ -8,7 +8,6 @@ const AppContextProvider = (props) => {
   const currencySymbol = "$";
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [isLoading, setIsLoading] = useState(false);
-  console.log("isLoading:", isLoading);
   const [doctors, setDoctors] = useState([]);
   const [token, setToken] = useState(
     localStorage.getItem("token") ? localStorage.getItem("token") : ""
@@ -56,27 +55,32 @@ const AppContextProvider = (props) => {
   }, [token]);
 
   useEffect(() => {
-    // request intercepter
-    console.log("inter");
-    axios.interceptors.request.use(
+    const requestInterceptor = axios.interceptors.request.use(
       (config) => {
         setIsLoading(true);
         return config;
       },
       (error) => {
+        setIsLoading(false);
         return Promise.reject(error);
       }
     );
-    //response intercepter
-    axios.interceptors.response.use(
-      (config) => {
+
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => {
         setIsLoading(false);
-        return config;
+        return response;
       },
       (error) => {
+        setIsLoading(false);
         return Promise.reject(error);
       }
     );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
   }, []);
   const value = {
     doctors,

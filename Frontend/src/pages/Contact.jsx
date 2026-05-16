@@ -22,10 +22,10 @@ const Contact = () => {
             Block C , Beta-I <br /> Greater Noida, Uttar Pradesh, India
           </p>
           <p className="text-gray-500">
-            Tel: +91 9015489536 <br /> Email: help@telemedicine.com
+            Tel: +91 9015489536 <br /> Email: help@carepoint.com
           </p>
           <p className="font-semibold text-lg text-gray-600 ">
-            Careers at TELEMEDICINE
+            Careers at CARE POINT
           </p>
           <p className="text-gray-500">
             Learn more about our teams and job openings.

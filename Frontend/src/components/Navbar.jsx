@@ -13,12 +13,15 @@ const Navbar = () => {
   };
   return (
     <div className="flex sticky top-0 bg-white/90 z-10 items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400">
-      <img
+      <div
         onClick={() => navigate("/")}
-        className="w-44 cursor-pointer"
-        src={assets.logo}
-        alt=""
-      />
+        className="flex items-center gap-2 cursor-pointer"
+      >
+        <img className="w-10" src={assets.logo} alt="Care Point" />
+        <span className="text-xl sm:text-2xl font-semibold text-[#000B6D]">
+          Care Point
+        </span>
+      </div>
       <ul className="hidden md:flex items-start gap-5 font-medium ">
         <NavLink to="/">
           <li className="py-1 ">HOME</li>
@@ -90,7 +93,12 @@ const Navbar = () => {
           } md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white  transition-all`}
         >
           <div className="flex items-center justify-between px-5 py-6">
-            <img className="w-36" src={assets.logo} alt="" />
+            <div className="flex items-center gap-2">
+              <img className="w-9" src={assets.logo} alt="Care Point" />
+              <span className="text-xl font-semibold text-[#000B6D]">
+                Care Point
+              </span>
+            </div>
             <img
               className="w-6"
               onClick={() => setShowMenu(false)}

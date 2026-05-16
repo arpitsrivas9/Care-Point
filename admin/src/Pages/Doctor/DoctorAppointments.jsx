@@ -22,18 +22,19 @@ const DoctorAppointments = () => {
     <div className="w-full max-w-6xl m-5">
       <p className="mb-3 text-lg font-medium">All Appointments</p>
       <div className="bg-white border rounded text-sm max-h-[80vh] min-h-[50vh] overflow-y-scroll ">
-        <div className="max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 py-3 px-6 border-b">
+        <div className="max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_2fr_1fr_1fr] gap-1 py-3 px-6 border-b">
           <p>#</p>
           <p>Patient</p>
           <p>Payment</p>
           <p>Age</p>
           <p>Date & Time</p>
+          <p>Problem</p>
           <p>Fees</p>
           <p>Action</p>
         </div>
         {appointments.map((item, index) => (
           <div
-            className="flex flex-wrap justify-between max-sm:gap-5 max-sm:text-base sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_1fr] gap-1 items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50 "
+            className="flex flex-wrap justify-between max-sm:gap-5 max-sm:text-base sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_2fr_1fr_1fr] gap-1 items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50 "
             key={index}
           >
             <p className="max-sm:hidden ">{index + 1}</p>
@@ -54,6 +55,20 @@ const DoctorAppointments = () => {
             <p>
               {slotDateFormat(item.slotDate)} , {item.slotTime}
             </p>
+            <div className="text-xs">
+              <span
+                className={`mb-1 inline-block rounded-full px-2 py-0.5 ${
+                  item.priority === "High"
+                    ? "bg-red-50 text-red-600"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {item.priority || "Normal"}
+              </span>
+              <p className="line-clamp-2">
+                {item.patientNote || "No note added"}
+              </p>
+            </div>
             <p>
               {currency}
               {item.amount}

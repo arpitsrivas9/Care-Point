@@ -145,7 +145,7 @@ const updateProfile = async (req, res) => {
 
 const bookAppointment = async (req, res) => {
   try {
-    const { userId, docId, slotDate, slotTime } = req.body;
+    const { userId, docId, slotDate, slotTime, patientNote = "" } = req.body;
     const docData = await doctorModel.findById(docId).select("-password");
 
     if (!docData.available) {
@@ -173,11 +173,31 @@ const bookAppointment = async (req, res) => {
 
     delete docData.slots_booked;
 
+    const cleanPatientNote = patientNote.trim().slice(0, 500);
+    const urgentWords = [
+      "urgent",
+      "emergency",
+      "severe",
+      "pain",
+      "bleeding",
+      "breathing",
+      "chest",
+      "fever",
+      "critical",
+    ];
+    const priority = urgentWords.some((word) =>
+      cleanPatientNote.toLowerCase().includes(word)
+    )
+      ? "High"
+      : "Normal";
+
     const appointmentData = {
       userId,
       docId,
       userData,
       docData,
+      patientNote: cleanPatientNote,
+      priority,
       amount: docData.fees,
       slotTime,
       slotDate,

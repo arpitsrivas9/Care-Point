@@ -12,7 +12,7 @@ import appointments_icon from "./appointments_icon.svg";
 import appointment_img from "./appointment_img.png";
 import earning_icon from "./earning_icon.svg";
 import patients_icon from "./patients_icon.svg";
-import logo from "./Telemedicine_logo.png"
+import logo from "./favicon.svg";
 import profile_pic from "./profile_pic.png";
 import dropdown_icon from "./dropdown_icon.svg";
 import group_profiles from "./group_profiles.png";

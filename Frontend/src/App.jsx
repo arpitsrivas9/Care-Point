@@ -15,6 +15,7 @@ import { useContext, useEffect } from "react";
 import { AppContext } from "./context/AppContext";
 import axios from "axios";
 import TopLoadingBar from "./components/TopLoadingBar";
+import AppointmentChatbot from "./components/AppointmentChatbot";
 
 const App = () => {
   const { isLoading, setIsLoading } = useContext(AppContext);
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="*" element={<div>Not found</div>} />
         </Routes>
         <Footer />
+        <AppointmentChatbot />
         <ToastContainer />
       </div>
     </>

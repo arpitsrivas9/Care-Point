@@ -6,17 +6,29 @@ import RelatedDoctors from "../components/RelatedDoctors";
 import { toast } from "react-toastify";
 import axios from "axios";
 import SlotSelector from "../components/SlotSelector";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const Appointment = () => {
   const { docId } = useParams();
   const { doctors, currencySymbol, token, backendUrl, getDoctorsData } =
     useContext(AppContext);
-  const daysOfWeek = ["SUN", "MON", "TUE", "WEND", "THE", "FRI", "SAT"];
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   const [docInfo, setDocInfo] = useState(null);
   const [docSlots, setDocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
   const [slotTime, setSlotTime] = useState("");
+  const [patientNote, setPatientNote] = useState("");
+  const [selectedStartDate, setSelectedStartDate] = useState(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -32,7 +44,7 @@ const Appointment = () => {
 
   useEffect(() => {
     getAvailableSlots();
-  }, [docInfo]);
+  }, [docInfo, selectedStartDate]);
 
   const fetchDocInfo = async () => {
     const docInfo = doctors.find((doc) => doc._id === docId);
@@ -46,23 +58,29 @@ const Appointment = () => {
 
   const getAvailableSlots = async () => {
     setDocSlots([]);
+    setSlotIndex(0);
+    setSlotTime("");
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const firstDate = new Date(selectedStartDate);
+    firstDate.setHours(0, 0, 0, 0);
 
     const generateSlotDate = (date) =>
       `${date.getDate()}_${date.getMonth() + 1}_${date.getFullYear()}`;
 
     for (let i = 0; i < 7; i++) {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + i);
+      const currentDate = new Date(firstDate);
+      currentDate.setDate(firstDate.getDate() + i);
 
       const endTime = new Date(currentDate);
       endTime.setHours(21, 0, 0, 0);
 
       // Set the start time
-      if (i === 0) {
-        currentDate.setHours(Math.max(currentDate.getHours() + 1, 10));
-        currentDate.setMinutes(currentDate.getMinutes() > 30 ? 30 : 0);
+      if (currentDate.toDateString() === new Date().toDateString()) {
+        const now = new Date();
+        currentDate.setHours(Math.max(now.getHours() + 1, 10));
+        currentDate.setMinutes(now.getMinutes() > 30 ? 30 : 0);
       } else {
         currentDate.setHours(10, 0, 0, 0);
       }
@@ -101,6 +119,15 @@ const Appointment = () => {
     }
   };
 
+  const formatDateInputValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const isToday = (date) => date.toDateString() === new Date().toDateString();
+
   const bookAppointment = async () => {
     if (!token) {
       toast.warn("Login to book appointment");
@@ -121,12 +148,13 @@ const Appointment = () => {
 
       const { data } = await axios.post(
         backendUrl + "/api/user/book-appointment",
-        { docId, slotDate, slotTime },
+        { docId, slotDate, slotTime, patientNote },
         { headers: { token } }
       );
 
       if (data.success) {
         toast.success(data.message);
+        setPatientNote("");
         getDoctorsData();
         navigate("/my-appointments");
       } else {
@@ -137,6 +165,11 @@ const Appointment = () => {
       toast.error(error.message);
     }
   };
+
+  const nextAvailableSlot = docSlots
+    .flat()
+    .find((slot) => slot?.time && slot?.datetime);
+
   return (
     docInfo && (
       <div>
@@ -165,6 +198,23 @@ const Appointment = () => {
               </button>
             </div>
 
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
+                  docInfo.available
+                    ? "bg-green-50 text-green-700 border border-green-200"
+                    : "bg-red-50 text-red-700 border border-red-200"
+                }`}
+              >
+                {docInfo.available ? "Available for booking" : "Currently unavailable"}
+              </span>
+              <span className="text-sm text-gray-500">
+                {docInfo.available && nextAvailableSlot
+                  ? `Next available: ${daysOfWeek[nextAvailableSlot.datetime.getDay()]} ${nextAvailableSlot.datetime.getDate()}, ${nextAvailableSlot.time}`
+                  : "Please check another doctor or try again later."}
+              </span>
+            </div>
+
             {/* ------------- Doctor Avbout */}
             <div>
               <p className="flex items-center gap-1 text-sm font-medium text-gray-900mt-3">
@@ -187,21 +237,63 @@ const Appointment = () => {
         {/* ---------- Booking slots */}
 
         <div className="sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700">
-          <p>Booking slots</p>
-          <div className="flex gap-3 items-center w-full overflow-x-scroll mt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p>Booking slots</p>
+            <div className="relative w-fit">
+              <button
+                onClick={() => setShowCalendar((prev) => !prev)}
+                className="flex items-center gap-2 text-primary"
+              >
+                <FaCalendarAlt />
+                Show More Dates
+              </button>
+              {showCalendar && (
+                <input
+                  type="date"
+                  min={formatDateInputValue(new Date())}
+                  value={formatDateInputValue(selectedStartDate)}
+                  onChange={(e) => {
+                    const date = new Date(e.target.value);
+                    if (!Number.isNaN(date.getTime())) {
+                      setSelectedStartDate(date);
+                      setShowCalendar(false);
+                    }
+                  }}
+                  className="absolute right-0 top-8 z-10 rounded border border-gray-300 bg-white px-3 py-2 shadow"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 items-center w-full overflow-x-scroll mt-4 pb-2">
             {docSlots.length &&
               docSlots.map((item, index) => (
                 <div
                   onClick={() => setSlotIndex(index)}
-                  className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${
+                  className={`relative min-w-28 cursor-pointer rounded-xl border px-4 py-5 text-center transition-all ${
                     slotIndex === index
-                      ? "bg-primary text-white"
-                      : "border border-gray-200"
+                      ? "bg-primary text-white border-primary shadow"
+                      : "border-gray-200 bg-white text-gray-800"
                   }`}
                   key={index}
                 >
-                  <p>{item[0] && daysOfWeek[item[0].datetime.getDay()]}</p>
-                  <p>{item[0] && item[0].datetime.getDate()}</p>
+                  {item[0] && isToday(item[0].datetime) && (
+                    <span
+                      className={`absolute left-2 top-2 rounded px-2 py-0.5 text-xs ${
+                        slotIndex === index
+                          ? "bg-white text-primary"
+                          : "bg-green-500 text-white"
+                      }`}
+                    >
+                      Today
+                    </span>
+                  )}
+                  <p className="mt-2 text-3xl font-medium">
+                    {item[0] && item[0].datetime.getDate()}
+                  </p>
+                  <p className="text-base">
+                    {item[0] && daysOfWeek[item[0].datetime.getDay()]}
+                  </p>
                 </div>
               ))}
           </div>
@@ -212,9 +304,31 @@ const Appointment = () => {
             slotTime={slotTime}
             setSlotTime={setSlotTime}
           />
+
+          <div className="mt-5 max-w-2xl">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Tell the doctor your problem
+            </label>
+            <textarea
+              value={patientNote}
+              onChange={(e) => setPatientNote(e.target.value)}
+              maxLength={500}
+              rows={4}
+              placeholder="Write symptoms, concerns, or anything the doctor should know before the appointment."
+              className="w-full resize-none rounded border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-primary"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              {patientNote.length}/500 characters
+            </p>
+          </div>
           <button
             onClick={bookAppointment}
-            className="bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-5"
+            disabled={!docInfo.available}
+            className={`text-sm font-light px-14 py-3 rounded-full my-5 ${
+              docInfo.available
+                ? "bg-primary text-white"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
             Book an appointment
           </button>

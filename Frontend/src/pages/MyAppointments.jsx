@@ -163,6 +163,12 @@ const MyAppointments = () => {
                 </span>
                 {slotDateFormat(item?.slotDate)} | {item.slotTime}
               </p>
+              {item.patientNote && (
+                <p className="mt-2 rounded bg-gray-50 p-2 text-xs text-zinc-600">
+                  <span className="font-medium text-zinc-700">Your note: </span>
+                  {item.patientNote}
+                </p>
+              )}
             </div>
             <div></div>
 
