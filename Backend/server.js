@@ -14,7 +14,10 @@ connectDB();
 connectCloudinary();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "care-point-citg8nqd9-arpit-srivastava-s-projects.vercel.app",
+  credentials: true
+}));
 
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
