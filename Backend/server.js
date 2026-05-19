@@ -15,11 +15,7 @@ connectCloudinary();
 
 app.use(express.json());
 app.use(cors({
-  origin: [
-    "https://care-point-seven.vercel.app",
-    "https://care-point-98ng73kmy-arpit-srivastava-s-projects.vercel.app"
-  ],
-  credentials: true
+  origin: "*"
 }))
 
 app.use("/api/admin", adminRouter);
